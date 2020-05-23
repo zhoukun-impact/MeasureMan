@@ -61,14 +61,6 @@ namespace MeasureMan
         /// </summary>
         public string denseCloud;
         /// <summary>
-        /// 模型坐标系原点(仅仅使用在DSM生成时)
-        /// </summary>
-        public GeoPoint origin;
-        /// <summary>
-        /// 模型尺度
-        /// </summary>
-        public float scale;
-        /// <summary>
         /// 三维模型路径
         /// </summary>
         public string modelPath;

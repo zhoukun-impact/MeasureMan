@@ -69,7 +69,7 @@ namespace MeasureMan
         /// </summary>
         /// <param name="denseCloudPath">稠密点云路径</param>
         /// <param name="savePath">保存路径</param>
-        public static void Convert2XYZ(string denseCloudPath,string savePath,Point3D origin)
+        public static void Convert2XYZ(string denseCloudPath,string savePath)
         {
             StreamReader sr = new StreamReader(denseCloudPath);
             StringBuilder sb = new StringBuilder();
@@ -84,10 +84,7 @@ namespace MeasureMan
             for (int i = 13; i < pointCount; i++)
             {
                 string[] singlePt = pointInfo[i].Split(' ');
-                if(origin!=null)
-                    sw.WriteLine((double.Parse(singlePt[0]) + origin.x) + " " + (double.Parse(singlePt[1]) + origin.y) + " " + (double.Parse(singlePt[2])+origin.z));
-                else
-                    sw.WriteLine(double.Parse(singlePt[0]) + " " + double.Parse(singlePt[1]) + " " + double.Parse(singlePt[2]));
+                sw.WriteLine(double.Parse(singlePt[0]) + " " + double.Parse(singlePt[1]) + " " + double.Parse(singlePt[2]));
             }
             sw.Close();
         }

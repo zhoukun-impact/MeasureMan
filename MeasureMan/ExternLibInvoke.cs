@@ -142,9 +142,7 @@ namespace MeasureMan
         /// <param name="modelPts">模型点</param>
         /// <param name="inputPath">稠密点云路径</param>
         /// <param name="savePath">绝对定向后的稠密点云保存路径</param>
-        /// <param name="T">模型坐标系原点</param>
-        /// <returns>缩放尺度</returns>
-        internal static float AbsoluteOrientation(List<GeoPoint> worldPts, List<Point3D> modelPts, string inputPath, string savePath, float[] T)
+        internal static void AbsoluteOrientation(List<GeoPoint> worldPts, List<Point3D> modelPts, string inputPath, string savePath)
         {
             int count = worldPts.Count * (worldPts.Count - 1) / 2;
             ME A = new ME(count, 1, Emgu.CV.CvEnum.DepthType.Cv64F);
@@ -161,8 +159,7 @@ namespace MeasureMan
             }
             ME XMat = (!(~A * A)) * (~A) * L;
             float scale = (float)XMat[0];
-            ExternLibInvoke.RigidTransformation(inputPath, savePath, scale, worldPts, modelPts, T);
-            return scale;
+            ExternLibInvoke.RigidTransformation(inputPath, savePath, scale, worldPts, modelPts);
         }
 
         /// <summary>
@@ -173,8 +170,7 @@ namespace MeasureMan
         /// <param name="scale">尺度</param>
         /// <param name="worldPts">物点（已投影）</param>
         /// <param name="modelPts">模型点</param>
-        /// <param name="T">模型坐标系原点</param>
-        private static void RigidTransformation(string denseCloud,string savePath,float scale,List<GeoPoint> worldPts,List<Point3D> modelPts,float[] T)
+        private static void RigidTransformation(string denseCloud,string savePath,float scale,List<GeoPoint> worldPts,List<Point3D> modelPts)
         {
             float[] w = new float[worldPts.Count * 3];
             float[] m = new float[modelPts.Count * 3];
@@ -187,7 +183,7 @@ namespace MeasureMan
                 m[i + 1] = (float)modelPts[i/3].y*scale;
                 m[i + 2] = (float)modelPts[i/3].z*scale;
             }
-            estimateRigid(denseCloud.ToCharArray(), savePath.ToCharArray(), scale, w, m, worldPts.Count, T);
+            estimateRigid(denseCloud.ToCharArray(), savePath.ToCharArray(), scale, w, m, worldPts.Count);
         }
         /*
         [DllImport("BATool.dll", CallingConvention = CallingConvention.Cdecl)]
@@ -206,7 +202,7 @@ namespace MeasureMan
         private static extern int StOutlierRemove(char[] path, bool isSparse, int[] removal, int meanK, double stddevMulThresh);
 
         [DllImport("PclTool.dll", CallingConvention = CallingConvention.Cdecl)]
-        private static extern void estimateRigid(char[] denseCloud, char[] savePath, float scale, float[] worldPts, float[] modelPts, int count, float[] T);
+        private static extern void estimateRigid(char[] denseCloud, char[] savePath, float scale, float[] worldPts, float[] modelPts, int count);
 
         [DllImport("GeneteODM.dll", EntryPoint = "GeneteDEM", CallingConvention = CallingConvention.Cdecl)]
         private static extern int GeneteODM(char[] path, ref byte errorMsg);

@@ -200,9 +200,8 @@ namespace MeasureMan
         /// <param name="path">保存路径</param>
         /// <param name="sr">参考系</param>
         /// <param name="pc">三维点云</param>
-        /// <param name="origin">模型坐标系原点</param>
         /// <returns>图层要素</returns>
-        public static IFeatureClass CreatePointCloudFeature(string path, ISpatialReference sr, List<Point3D> pc,Point3D origin)
+        public static IFeatureClass CreatePointCloudFeature(string path, ISpatialReference sr, List<Point3D> pc)
         {
             string folder = System.IO.Path.GetDirectoryName(path);
             //先将点云转换成点图层
@@ -210,19 +209,8 @@ namespace MeasureMan
             IWorkspaceEdit wsEdit = GetEdit(folder);
             wsEdit.StartEditing(false);
             wsEdit.StartEditOperation();
-            if (origin != null)
-            {
-                foreach (Point3D point in pc)
-                {
-                    Point3D newPt = new Point3D(point.x + origin.x, point.y + origin.y, point.z + origin.z);
-                    AddFeature(fc, new Point3D[] { newPt }, new object[] { newPt.x, newPt.y, newPt.z });
-                }
-            }
-            else
-            {
-                foreach (Point3D point in pc)
-                    AddFeature(fc, new Point3D[] { point }, new object[] { point.x, point.y, point.z});
-            }
+            foreach (Point3D point in pc)
+                AddFeature(fc, new Point3D[] { point }, new object[] { point.x, point.y, point.z });
             wsEdit.StopEditing(true);
             wsEdit.StopEditOperation();
             return fc;

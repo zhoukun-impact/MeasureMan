@@ -84,6 +84,14 @@ namespace MeasureMan
         /// </summary>
         IFeatureLayer layer;
         /// <summary>
+        /// 相机方向
+        /// </summary>
+        CameraDirection cameraDirection;
+        /// <summary>
+        /// 模型外包盒
+        /// </summary>
+        BBox box;
+        /// <summary>
         /// 三维视图
         /// </summary>
         CSharpGL.Scene scene;
@@ -210,6 +218,9 @@ namespace MeasureMan
             稠密重建ToolStripMenuItem.Enabled = false;
             dSM转换ToolStripMenuItem.Enabled = false;
             表面重建ToolStripMenuItem1.Enabled = false;
+            this.AllowDrop = true;
+            this.DragEnter+=MeasureMan_DragEnter;
+            this.DragDrop+=MeasureMan_DragDrop;
             InitiateGLWindow();
             imageBox1.Cursor = Cursors.Cross;
             progressBar1.Visible = false;
@@ -308,6 +319,15 @@ namespace MeasureMan
                 toolStripLabel4.Text = "Vertex";
                 toolStripLabel5.Text = "Face";
                 toolStripLabel6.Text = "Model Path";
+                ddbView.Text = "Camera";
+                ddbView.ToolTipText = "Camera";
+                topToolStripMenuItem.Text = "Top View";
+                bottomToolStripMenuItem.Text = "Bottom View";
+                leftToolStripMenuItem.Text = "Left View";
+                rightToolStripMenuItem.Text = "Right View";
+                frontToolStripMenuItem.Text = "Front View";
+                backToolStripMenuItem.Text = "Back View";
+                fullToolStripMenuItem.Text = "Full View";
                 if (hasAE)
                 {
                     toolStripStatusLabel1.Text = "Coord. X:";
@@ -1579,7 +1599,6 @@ namespace MeasureMan
                         }
                         Model3DNode node = Model3DNode.Create(0, project.sparseCloud);
                         BeginDrawing(node);
-                        scene.Camera.Position = new vec3(5, 3, 4);
                         txtModelPath.Text = project.sparseCloud;
                     }
                     else if (treeNode.Text.Equals("稠密点云") || treeNode.Text.Equals("Dense Cloud"))
@@ -1595,8 +1614,6 @@ namespace MeasureMan
                         }
                         Model3DNode node = Model3DNode.Create(1, project.denseCloud);
                         BeginDrawing(node);  
-                        if(project.origin!=null)
-                            scene.Camera.Position = new vec3(5*project.scale, 3*project.scale, 4*project.scale);
                         txtModelPath.Text = project.denseCloud;
                     }
                     else if (treeNode.Text.Equals("DSM"))
@@ -1644,11 +1661,7 @@ namespace MeasureMan
                             Model3DNode node = Model3DNode.Create(2, project.modelPath);
                             model = node;
                         }
-                        else
-                            model.Scale = new vec3(1, 1, 1);
                         BeginDrawing(model);
-                        if (project.origin != null)
-                            scene.Camera.Position = new vec3(5 * project.scale, 3 * project.scale, 4 * project.scale);
                         txtModelPath.Text = project.modelPath;
                     }
                 }
@@ -1658,6 +1671,56 @@ namespace MeasureMan
         #endregion
 
         #region 工程及系统模块
+
+        private void MeasureMan_DragDrop(object sender, DragEventArgs e)
+        {
+            string[] s = (string[])e.Data.GetData(DataFormats.FileDrop, false);
+            if (s[0].Split('.').Last().ToUpper().Equals("MSM"))
+            {
+                if (s[0].Equals(toolStripTextBox1.Text))
+                {
+                    if (lang == Language.Chinese)
+                        MessageBox.Show("该工程已在系统中打开！");
+                    else if (lang == Language.English)
+                        MessageBox.Show("This project has been opened!");
+                    return;
+                }
+                if (project != null)
+                {
+                    if (!project.saved)
+                    {
+                        if (lang == Language.Chinese && MessageBox.Show("原工程未保存，是否要保存原工程后再打开新的工程?", "MeasureMan", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                            ProjectToFile();
+                        else if (lang == Language.English && MessageBox.Show("The original project is not saved, whether to save the original project and then open the new project?", "MeasureMan", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                            ProjectToFile();
+                    }
+                    if (rtbLog.Text != "")
+                    {
+                        if (lang == Language.Chinese && MessageBox.Show("是否保存原工程的日志?", "MeasureMan", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                            btOutputLog_Click(sender, e);
+                        else if (lang == Language.English && MessageBox.Show("Whether to save the log of the original project?", "MeasureMan", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                            btOutputLog_Click(sender, e);
+                        rtbLog.Text = "";
+                    }
+                }
+                if (OpenProject(s[0]))
+                {
+                    if (lang == Language.Chinese)
+                        MessageBox.Show("工程打开成功！");
+                    else if (lang == Language.English)
+                        MessageBox.Show("The project was opened successfully!");
+                }
+            }
+        }
+
+        private void MeasureMan_DragEnter(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent(DataFormats.FileDrop))
+                e.Effect = DragDropEffects.Copy;
+            else
+                e.Effect = DragDropEffects.None;
+        }
+
         /// <summary>
         /// 读取最近打开的工程
         /// </summary>
@@ -1976,12 +2039,7 @@ namespace MeasureMan
                     sw.WriteLine(project.sparseCloud);
                 sw.WriteLine("--------");
                 if (project.denseCloud != null)
-                {
-                    sw.Write(project.denseCloud);
-                    if (project.origin != null)
-                        sw.Write(" " + project.origin.x + " " + project.origin.y + " " + project.origin.z+" "+project.origin.proCode+" "+project.scale);
-                    sw.WriteLine();   
-                }  
+                    sw.WriteLine(project.denseCloud);   
                 sw.WriteLine("--------");
                 if(project.DSMPath!=null)
                     sw.WriteLine(project.DSMPath);
@@ -2322,20 +2380,7 @@ namespace MeasureMan
                     }
                     else
                     {
-                        if (text[i].Contains(" "))
-                        {
-                            string[] info = text[i].Split(' ');
-                            if (File.Exists(info[0]))
-                            {
-                                project.denseCloud = info[0];
-                                project.origin = new GeoPoint(double.Parse(info[1]), double.Parse(info[2]), double.Parse(info[3]), int.Parse(info[4]));
-                                project.scale = float.Parse(info[5]);
-                                稠密重建ToolStripMenuItem.Enabled = false;
-                                dSM转换ToolStripMenuItem.Enabled = true;
-                                表面重建ToolStripMenuItem1.Enabled = true;
-                            }
-                        }
-                        else if (File.Exists(text[i]))
+                        if (File.Exists(text[i]))
                         {
                             project.denseCloud = text[i];
                             稠密重建ToolStripMenuItem.Enabled = false;
@@ -3513,16 +3558,30 @@ namespace MeasureMan
 
         #region 三维模型绘制
         /// <summary>
+        /// 相机方向
+        /// </summary>
+        public enum CameraDirection
+        {
+            Top,
+            Bottom,
+            Left,
+            Right,
+            Front,
+            Back
+        }
+
+        /// <summary>
         /// 初始化三维视图
         /// </summary>
         private void InitiateGLWindow()
         {
             RemoveGLWindowControl();
-            var position = new vec3(5, 3, 4);
+            var position = new vec3(0, 0, 1);
             var center = new vec3(0, 0, 0);
             var up = new vec3(0, 1, 0);
-            var camera = new CSharpGL.Camera(position, center, up, CameraType.Perspective, this.winGLCanvas1.Width, this.winGLCanvas1.Height);
+            var camera = new CSharpGL.Camera(position, center, up, CameraType.Ortho, this.winGLCanvas1.Width, this.winGLCanvas1.Height);
             scene = new CSharpGL.Scene(camera);
+            cameraDirection = CameraDirection.Top;
         }
 
         /// <summary>
@@ -3531,10 +3590,15 @@ namespace MeasureMan
         /// <param name="node">三维模型</param>
         private void BeginDrawing(Model3DNode node)
         {
+            ResizeGLWindow();
             ClearLastMeasurement();
             RemoveGLWindowControl();
             txtVertex.Text = node.GetVertCount().ToString();
             txtFace.Text = node.GetFaceCount().ToString();
+            box = node.GetBBox();
+            node.bboxCenter = box.center;
+            float zoom = ComputeZoom();
+            node.Scale = new vec3(zoom, zoom, zoom);
             scene.RootNode = node;
             AddGLWindowControl();
             var list = new ActionList();
@@ -3553,11 +3617,11 @@ namespace MeasureMan
             if (scene != null && scene.RootNode != null)
             {
                 ball = new ArcBallManipulater(GLMouseButtons.Left);
-                ball.MouseSensitivity = 3;
+                ball.MouseSensitivity = 2;
                 ball.Bind(scene.Camera, this.winGLCanvas1);
                 ball.Rotated += manipulater_Rotated;
                 tran = new TranslateManipulater(scene.RootNode, GLMouseButtons.Right);
-                tran.MouseSensitivity = 7;
+                tran.MouseSensitivity = 2;
                 tran.Bind(scene.Camera, this.winGLCanvas1);
                 winGLCanvas1.MouseWheel += openGLControl1_MouseWheel;
             }
@@ -3581,7 +3645,7 @@ namespace MeasureMan
             txtVertex.Text = "";
         }
 
-        void manipulater_Rotated(object sender, CSharpGL.ArcBallManipulater.Rotation e)
+        private void manipulater_Rotated(object sender, CSharpGL.ArcBallManipulater.Rotation e)
         {
             SceneNodeBase node = scene.RootNode;
             node.RotationAngle = e.angleInDegree;
@@ -3590,8 +3654,29 @@ namespace MeasureMan
 
         private void winGLCanvas1_Resize_1(object sender, EventArgs e)
         {
-            if(scene!=null&&scene.Camera!=null)
-                scene.Camera.AspectRatio = ((float)this.winGLCanvas1.Width) / ((float)this.winGLCanvas1.Height);
+            ResizeGLWindow();
+        }
+
+        /// <summary>
+        /// 缩放三维视图
+        /// </summary>
+        private void ResizeGLWindow()
+        {
+            if (scene != null)
+            {
+                if (scene.RootNode != null)
+                {
+                    float zoom = ComputeZoom();
+                    scene.RootNode.Scale = new vec3(zoom, zoom, zoom);
+                }
+                if (scene.Camera != null)
+                {
+                    scene.Camera.Bottom = -this.winGLCanvas1.Height / 2.0f;
+                    scene.Camera.Left = -this.winGLCanvas1.Width / 2.0f;
+                    scene.Camera.Top = this.winGLCanvas1.Height / 2.0f;
+                    scene.Camera.Right = this.winGLCanvas1.Width / 2.0f;
+                }
+            }
         }
 
         private void winGLCanvas1_OpenGLDraw(object sender, PaintEventArgs e)
@@ -3608,9 +3693,127 @@ namespace MeasureMan
         private void openGLControl1_MouseWheel(object sender, MouseEventArgs e)
         {
             var scene = this.scene;
-            if (scene != null)
+            if (scene != null&&scene.RootNode!=null)
             {
-                scene.Camera.MouseWheel(e.Delta);
+                float zoom=scene.RootNode.Scale[0];
+                float delta = e.Delta / 8.0f;
+                float c_defaultDeg2Zoom = 20.0f;
+                float zoomFactor = (float)Math.Pow(1.1f, delta/ c_defaultDeg2Zoom);
+                if (zoomFactor > 0.0f && zoomFactor != 1.0f)
+                    zoom=zoom*zoomFactor;
+                scene.RootNode.Scale = new vec3(zoom, zoom, zoom);
+            }
+        }
+
+        /// <summary>
+        /// 计算相机缩放比例
+        /// </summary>
+        /// <returns>缩放比例</returns>
+        private float ComputeZoom()
+        {
+            float rx=0, ry=0;
+            int width=this.winGLCanvas1.Width,height=this.winGLCanvas1.Height;
+            switch (cameraDirection)
+            {
+                case CameraDirection.Front:
+                case CameraDirection.Back:
+                    rx = width / (box.length.y * 1.01f);
+                    ry = height / (box.length.z * 1.01f);
+                    break;
+                case CameraDirection.Left:
+                case CameraDirection.Right:
+                    rx = width / (box.length.x * 1.01f);
+                    ry = height / (box.length.z * 1.01f);
+                    break;
+                case CameraDirection.Top:
+                case CameraDirection.Bottom:
+                    rx = width / (box.length.x * 1.01f);
+                    ry = height / (box.length.y * 1.01f);
+                    break;
+            }
+            return rx < ry ? rx : ry;
+        }
+
+        /// <summary>
+        /// 切换相机位置
+        /// </summary>
+        /// <param name="direction">相机方向</param>
+        private void SwitchCameraView(CameraDirection direction)
+        {
+            if (scene != null && scene.RootNode != null)
+            {
+                cameraDirection = direction;
+                float zoom=ComputeZoom();
+                scene.RootNode.Scale = new vec3(zoom, zoom, zoom);
+                mat4 totalRotation = mat4.identity();
+                switch (direction)
+                {
+                    case CameraDirection.Front:
+                        totalRotation = glm.rotate(totalRotation, -90, new vec3(0, 0, 1));
+                        totalRotation = glm.rotate(totalRotation, -90, new vec3(0, 1, 0));
+                        break;
+                    case CameraDirection.Back:
+                        totalRotation = glm.rotate(totalRotation, 90, new vec3(0, 0, 1));
+                        totalRotation = glm.rotate(totalRotation, 90, new vec3(0, 1, 0));
+                        break;
+                    case CameraDirection.Left:
+                        totalRotation = glm.rotate(totalRotation, -90, new vec3(1, 0, 0));
+                        break;
+                    case CameraDirection.Right:
+                        totalRotation = glm.rotate(totalRotation, 180, new vec3(0, 0, 1));
+                        totalRotation = glm.rotate(totalRotation, 90, new vec3(1, 0, 0));
+                        break;
+                    case CameraDirection.Bottom:
+                        totalRotation = glm.rotate(totalRotation, 180, new vec3(0, 1, 0));
+                        break;
+                }
+                scene.RootNode.WorldPosition = new vec3(0, 0, 0);
+                ball.SetRotationMatrix(totalRotation);
+                float angleInDegree;
+                vec3 axis;
+                totalRotation.ToQuaternion().Parse(out angleInDegree, out axis);
+                scene.RootNode.RotationAngle = angleInDegree;
+                scene.RootNode.RotationAxis = axis;
+            }
+        }
+
+        private void topToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            SwitchCameraView(CameraDirection.Top);
+        }
+
+        private void bottomToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            SwitchCameraView(CameraDirection.Bottom);
+        }
+
+        private void leftToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            SwitchCameraView(CameraDirection.Left);
+        }
+
+        private void rightToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            SwitchCameraView(CameraDirection.Right);
+        }
+
+        private void frontToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            SwitchCameraView(CameraDirection.Front);
+        }
+
+        private void backToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            SwitchCameraView(CameraDirection.Back);
+        }
+
+        private void fullToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (scene != null && scene.RootNode != null)
+            {
+                float zoom = ComputeZoom();
+                scene.RootNode.Scale = new vec3(zoom, zoom, zoom);
+                scene.RootNode.WorldPosition = new vec3(0, 0, 0);
             }
         }
         #endregion
@@ -4109,11 +4312,7 @@ namespace MeasureMan
                 string outPath = rootDir + "models\\option-0000.ply";
 
                 if (worldPts.Count >= 3)
-                {
-                    float[] T = new float[3];
-                    project.scale = ExternLibInvoke.AbsoluteOrientation(worldPts, modelPts, outPath, (string)savePath, T);
-                    project.origin = new GeoPoint(T[0], T[1], T[2], proCode);
-                }
+                    ExternLibInvoke.AbsoluteOrientation(worldPts, modelPts, outPath, (string)savePath);
                 else
                 {
                     AppendText(GCPwarning);
@@ -4197,15 +4396,9 @@ namespace MeasureMan
                     MessageBox.Show("The dense point cloud file saved in the project is not found!");
                 return;
             }
-            if (project.origin == null)
-            {
-                if ((lang == Language.Chinese&&MessageBox.Show("未进行绝对定向，DSM数据非真实数据，是否生成？", "MeasureMan", MessageBoxButtons.YesNo) == DialogResult.No)||
-                    (lang == Language.English && MessageBox.Show("Without absolute orientation, DSM data is not real data, whether generate it?", "MeasureMan", MessageBoxButtons.YesNo) == DialogResult.No))
-                    return;
-            }
             DSMTransformation transform;
             int proCode = project.GetProjectionCode();
-            transform = new DSMTransformation(project.denseCloud, proCode, project.origin,hasAE,lang);
+            transform = new DSMTransformation(project.denseCloud, proCode,hasAE,lang);
             transform.ShowDialog();
             if (!transform.succeed)
                 return;
@@ -4229,7 +4422,7 @@ namespace MeasureMan
                 ISpatialReferenceFactory srf = new SpatialReferenceEnvironmentClass();
                 if (proCode != -1)
                     sr = srf.CreateProjectedCoordinateSystem(proCode);
-                IFeatureClass featureClass = AEOperation.CreatePointCloudFeature(path, sr, pcTool.pointCloud,project.origin);
+                IFeatureClass featureClass = AEOperation.CreatePointCloudFeature(path, sr, pcTool.pointCloud);
                 //要素转TIN
                 ITin tin = AEOperation.CreateTIN(featureClass, path);
                 (featureClass as IDataset).Delete();
@@ -4786,15 +4979,7 @@ namespace MeasureMan
                         mat4 projectionMat = this.scene.Camera.GetProjectionMatrix();
                         mat4 viewMat = this.scene.Camera.GetViewMatrix();
                         mat4 modelMat = (pickedGeometry.FromObject as PickableNode).GetModelMatrix();
-                        var lastModelSpacePos = glm.unProject(lastWindowSpacePos, viewMat * modelMat, projectionMat, viewport);
-                        Point3D firstPt = (scene.RootNode as Model3DNode).GetFirstPoint().Clone();
-                        if (project.origin != null&&(!txtModelPath.Text.Equals(project.sparseCloud)))
-                        {
-                            firstPt.x += project.origin.x;
-                            firstPt.y += project.origin.y;
-                            firstPt.z += project.origin.z;
-                        }
-                        vec3 pickedPt = new vec3((float)(lastModelSpacePos.x + firstPt.x), (float)(lastModelSpacePos.y + firstPt.y), (float)(lastModelSpacePos.z + firstPt.z));
+                        var pickedPt = glm.unProject(lastWindowSpacePos, viewMat * modelMat, projectionMat, viewport);
                         switch (measure)
                         {
                             case MeasureType.Location:

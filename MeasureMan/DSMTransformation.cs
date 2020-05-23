@@ -44,10 +44,6 @@ namespace MeasureMan
         /// </summary>
         public string inputPath;
         /// <summary>
-        /// 模型坐标系原点
-        /// </summary>
-        private Point3D origin;
-        /// <summary>
         /// 投影编号
         /// </summary>
         private int proCode;
@@ -65,9 +61,8 @@ namespace MeasureMan
         /// </summary>
         /// <param name="denseCloud">稠密点云路径</param>
         /// <param name="proCode">投影编号</param>
-        /// <param name="origin">模型坐标系原点</param>
         /// <param name="hasAE">是否检测到AE</param>
-        public DSMTransformation(string denseCloud, int proCode, Point3D origin,bool hasAE,Language lang)
+        public DSMTransformation(string denseCloud, int proCode,bool hasAE,Language lang)
         {
             InitializeComponent();
             this.lang = lang;
@@ -100,7 +95,6 @@ namespace MeasureMan
             cbxWeightFunc.SelectedIndex = 0;
             this.inputPath = denseCloud;
             this.proCode = proCode;
-            this.origin = origin;
             succeed = false;
         }
 
@@ -205,7 +199,7 @@ namespace MeasureMan
                 ODMPath = dsmDir + "\\tempODM.odm";
                 cfgPath = dsmDir + "\\settings.cfg";
                 string path2 = dsmDir + "\\denseCloud.xyz";
-                PointCloudTool.Convert2XYZ(inputPath,path2,origin);
+                PointCloudTool.Convert2XYZ(inputPath,path2);
                 inputPath = path2;
 
                 StreamWriter sw = new StreamWriter(cfgPath);

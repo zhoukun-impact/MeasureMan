@@ -116,6 +116,15 @@
             this.btGetArea = new System.Windows.Forms.ToolStripButton();
             this.btSOR = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
+            this.ddbView = new System.Windows.Forms.ToolStripDropDownButton();
+            this.topToolStripMenuItem=new System.Windows.Forms.ToolStripMenuItem();
+            this.bottomToolStripMenuItem=new System.Windows.Forms.ToolStripMenuItem();
+            this.leftToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.rightToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.frontToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.backToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.fullToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+
             this.toolStripLabel4 = new System.Windows.Forms.ToolStripLabel();
             this.txtVertex = new System.Windows.Forms.ToolStripTextBox();
             this.toolStripLabel5 = new System.Windows.Forms.ToolStripLabel();
@@ -743,6 +752,7 @@
             this.btGetLength,
             this.btGetArea,
             this.btSOR,
+            this.ddbView,
             this.toolStripSeparator2,
             this.toolStripLabel4,
             this.txtVertex,
@@ -802,6 +812,63 @@
             // 
             this.toolStripSeparator2.Name = "toolStripSeparator2";
             this.toolStripSeparator2.Size = new System.Drawing.Size(6, 26);
+            //
+            // ddbView
+            //
+            this.ddbView.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.ddbView.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.topToolStripMenuItem,
+            this.bottomToolStripMenuItem,
+            this.leftToolStripMenuItem,
+            this.rightToolStripMenuItem,
+            this.frontToolStripMenuItem,
+            this.backToolStripMenuItem,
+            this.fullToolStripMenuItem});
+            this.ddbView.Name = "ddbView";
+            this.ddbView.Image = ((System.Drawing.Image)(resources.GetObject("ddbView.Image")));
+            this.ddbView.ToolTipText = "相机位置";
+            //
+            //topToolStripMenuItem
+            //
+            this.topToolStripMenuItem.Name = "topToolStripMenuItem";
+            this.topToolStripMenuItem.Text = "顶视图";
+            this.topToolStripMenuItem.Click += new System.EventHandler(this.topToolStripMenuItem_Click);
+            //
+            //bottomToolStripMenuItem
+            //
+            this.bottomToolStripMenuItem.Name = "bottomToolStripMenuItem";
+            this.bottomToolStripMenuItem.Text = "底视图";
+            this.bottomToolStripMenuItem.Click += new System.EventHandler(this.bottomToolStripMenuItem_Click);
+            //
+            //leftToolStripMenuItem
+            //
+            this.leftToolStripMenuItem.Name = "leftToolStripMenuItem";
+            this.leftToolStripMenuItem.Text = "左视图";
+            this.leftToolStripMenuItem.Click += new System.EventHandler(this.leftToolStripMenuItem_Click);
+            //
+            //rightToolStripMenuItem
+            //
+            this.rightToolStripMenuItem.Name = "rightToolStripMenuItem";
+            this.rightToolStripMenuItem.Text = "右视图";
+            this.rightToolStripMenuItem.Click += new System.EventHandler(this.rightToolStripMenuItem_Click);
+            //
+            //frontToolStripMenuItem
+            //
+            this.frontToolStripMenuItem.Name = "frontToolStripMenuItem";
+            this.frontToolStripMenuItem.Text = "前视图";
+            this.frontToolStripMenuItem.Click += new System.EventHandler(this.frontToolStripMenuItem_Click);
+            //
+            //backToolStripMenuItem
+            //
+            this.backToolStripMenuItem.Name = "backToolStripMenuItem";
+            this.backToolStripMenuItem.Text = "后视图";
+            this.backToolStripMenuItem.Click += new System.EventHandler(this.backToolStripMenuItem_Click);
+            //
+            //fullToolStripMenuItem
+            //
+            this.fullToolStripMenuItem.Name = "fullToolStripMenuItem";
+            this.fullToolStripMenuItem.Text = "全图";
+            this.fullToolStripMenuItem.Click += new System.EventHandler(this.fullToolStripMenuItem_Click);
             // 
             // toolStripLabel4
             // 
@@ -1609,6 +1676,14 @@
         private System.Windows.Forms.ToolStripMenuItem 三维结果ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem 地图结果ToolStripMenuItem;
         private System.Windows.Forms.ToolStripButton btSOR;
+        private System.Windows.Forms.ToolStripDropDownButton ddbView;
+        private System.Windows.Forms.ToolStripMenuItem topToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem bottomToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem leftToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem rightToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem frontToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem backToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem fullToolStripMenuItem;
         private System.Windows.Forms.ToolStripLabel toolStripLabel6;
         private System.Windows.Forms.ToolStripTextBox txtModelPath;
         private System.Windows.Forms.ToolStripMenuItem 移除图像ToolStripMenuItem;

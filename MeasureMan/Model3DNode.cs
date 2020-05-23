@@ -63,9 +63,9 @@ void main(void) {
         /// </summary>
         private int faceCount;
         /// <summary>
-        /// 第一个点
+        /// 外包盒
         /// </summary>
-        private Point3D firstPt;
+        private BBox bbox;
 
         /// <summary>
         /// 创建CSharpGL认可的模型
@@ -108,7 +108,7 @@ void main(void) {
         {
             vertexCount=(model as Model3D).VertexCount();
             faceCount=(model as Model3D).FaceCount();
-            firstPt = (model as Model3D).GetFirstPoint();
+            bbox = (model as Model3D).GetBBox();
             this.RenderWireframe = false;//为false显示更加真实
             this.RenderBody = true;
         }
@@ -132,12 +132,12 @@ void main(void) {
         }
 
         /// <summary>
-        /// 获得第一个点
+        /// 获得外包盒
         /// </summary>
-        /// <returns>第一个点</returns>
-        public Point3D GetFirstPoint()
+        /// <returns>外包盒</returns>
+        public BBox GetBBox()
         {
-            return firstPt;
+            return bbox;
         }
 
         /// <summary>

@@ -9,6 +9,25 @@ using System.IO;
 namespace MeasureMan
 {
     /// <summary>
+    /// 自定义外包盒
+    /// </summary>
+    public struct BBox
+    {
+        public BBox(vec3 min, vec3 max) 
+        { 
+            this.min = min; 
+            this.max = max;
+            center = new vec3();
+            length = new vec3();
+        }
+
+        public vec3 min;
+        public vec3 max;
+        public vec3 center;
+        public vec3 length;
+    }
+
+    /// <summary>
     /// 三维模型数据类
     /// </summary>
     public class Model3D:IBufferSource
@@ -38,10 +57,6 @@ namespace MeasureMan
         /// 面集
         /// </summary>
         private List<Face> faceList;
-        /// <summary>
-        /// 第一个点
-        /// </summary>
-        private Point3D pt;
 
         /// <summary>
         /// 获得点数量
@@ -68,12 +83,30 @@ namespace MeasureMan
         }
 
         /// <summary>
-        /// 获得第一个点
+        /// 获得外包盒
         /// </summary>
-        /// <returns>第一个点</returns>
-        public Point3D GetFirstPoint()
+        /// <returns>外包盒</returns>
+        public BBox GetBBox()
         {
-            return pt;
+            BBox bbox = new BBox(new vec3(float.MaxValue, float.MaxValue, float.MaxValue), new vec3(float.MinValue, float.MinValue, float.MinValue));
+            foreach (vec3 pt in points)
+            {
+                if (pt.x > bbox.max.x)
+                    bbox.max.x = pt.x;
+                if (pt.x < bbox.min.x)
+                    bbox.min.x = pt.x;
+                if (pt.y > bbox.max.y)
+                    bbox.max.y = pt.y;
+                if (pt.y < bbox.min.y)
+                    bbox.min.y = pt.y;
+                if (pt.z > bbox.max.z)
+                    bbox.max.z = pt.z;
+                if (pt.z < bbox.min.z)
+                    bbox.min.z = pt.z;
+            }
+            bbox.center = 0.5f * (bbox.max + bbox.min);
+            bbox.length = bbox.max - bbox.min;
+            return bbox;
         }
 
         /// <summary>
@@ -100,13 +133,7 @@ namespace MeasureMan
             for (; i < count; i++)
             {
                 string[] singlePt = allInfo[i].Split(' ');
-                if (points.Count == 0)
-                {
-                    points.Add(new vec3(0, 0, 0));
-                    pt = new Point3D(double.Parse(singlePt[0]), double.Parse(singlePt[1]), double.Parse(singlePt[2]));
-                }   
-                else
-                    points.Add(new vec3((float)(double.Parse(singlePt[0]) - pt.x), (float)(double.Parse(singlePt[1]) - pt.y), (float)(double.Parse(singlePt[2]) - pt.z)));
+                points.Add(new vec3((float)(double.Parse(singlePt[0])), (float)(double.Parse(singlePt[1])), (float)(double.Parse(singlePt[2]))));
                 colors.Add(new vec3(float.Parse(singlePt[6]) / 255, float.Parse(singlePt[7]) / 255, float.Parse(singlePt[8]) / 255));
             }
             count = i + faceCount;
@@ -137,13 +164,7 @@ namespace MeasureMan
             for (int i = 10; i < pointCount; i++)
             {
                 string[] singlePt = pointInfo[i].Split(' ');
-                if (points.Count == 0)
-                {
-                    points.Add(new vec3(0, 0, 0));
-                    pt = new Point3D(double.Parse(singlePt[0]), double.Parse(singlePt[1]), double.Parse(singlePt[2]));
-                }
-                else
-                    points.Add(new vec3((float)(double.Parse(singlePt[0]) - pt.x), (float)(double.Parse(singlePt[1]) - pt.y), (float)(double.Parse(singlePt[2]) - pt.z)));
+                points.Add(new vec3((float)(double.Parse(singlePt[0])), (float)(double.Parse(singlePt[1])), (float)(double.Parse(singlePt[2]))));
                 colors.Add(new vec3(float.Parse(singlePt[3])/255, float.Parse(singlePt[4])/255, float.Parse(singlePt[5])/255));
             }
         }
@@ -168,13 +189,7 @@ namespace MeasureMan
             for (int i = 13; i < pointCount; i++)
             {
                 string[] singlePt = pointInfo[i].Split(' ');
-                if (points.Count == 0)
-                {
-                    points.Add(new vec3(0, 0, 0));
-                    pt = new Point3D(double.Parse(singlePt[0]), double.Parse(singlePt[1]), double.Parse(singlePt[2]));
-                }
-                else
-                    points.Add(new vec3((float)(double.Parse(singlePt[0]) - pt.x), (float)(double.Parse(singlePt[1]) - pt.y), (float)(double.Parse(singlePt[2]) - pt.z)));
+                points.Add(new vec3((float)(double.Parse(singlePt[0])), (float)(double.Parse(singlePt[1])), (float)(double.Parse(singlePt[2]))));
                 colors.Add(new vec3(float.Parse(singlePt[6])/255, float.Parse(singlePt[7])/255, float.Parse(singlePt[8])/255));
             }
         }
