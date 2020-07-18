@@ -1904,9 +1904,9 @@ namespace MeasureMan
                 p.StartInfo.RedirectStandardOutput = false;
                 p.StartInfo.CreateNoWindow = true;
                 p.Start();
-                p.StandardInput.WriteLine("taskkill /im pmvs2.exe /f&exit");
-                p.StandardInput.WriteLine("taskkill /im genOption.exe&exit");
-                p.StandardInput.WriteLine("taskkill /im SiftGPU.exe&exit");
+                p.StandardInput.WriteLine("taskkill /im pmvs2.exe /f");
+                p.StandardInput.WriteLine("taskkill /im genOption.exe /f");
+                p.StandardInput.WriteLine("taskkill /im cmvs.exe /f");
                 p.StandardInput.AutoFlush = true;
                 p.WaitForExit();
                 p.Close();
